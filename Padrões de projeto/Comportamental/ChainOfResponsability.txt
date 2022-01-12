@@ -1,0 +1,118 @@
+//Microsoft (R) Visual C# Compiler version 3.4.0-beta4-19562-05 (ff930dec)
+//Copyright (C) Microsoft Corporation. All rights reserved.
+
+
+using System;
+using System.Text;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Collections;
+
+namespace Rextester
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            //Your code goes here
+            Orcamento orcamento = new Orcamento(2000);
+            orcamento.Adiciona(new Item("bola", 10));
+            orcamento.Adiciona(new Item("bala", 20));
+            
+            CalculadorDeDescontos calc = new CalculadorDeDescontos();
+            calc.Calcula(orcamento);
+        }
+    }
+    
+    public class Item 
+    {
+        public String Nome { get; private set; }
+        public double Valor { get; private set; }
+
+        public Item(String nome, double valor) 
+        {
+            this.Nome = nome;
+            this.Valor = valor;
+        }
+    }
+    
+    public class Orcamento 
+    {
+        public IList<Item> Itens { get; private set; }
+        public double Valor { get; private set; }
+        
+        public Orcamento(double valor)
+        {
+            this.Valor = valor;
+            this.Itens = new List<Item>();
+        }
+
+        public void Adiciona(Item item) 
+        {
+            Itens.Add(item);
+        }       
+    }
+    
+    public class CalculadorDeDescontos 
+    {
+        public void Calcula(Orcamento orcamento) 
+        {
+            Desconto d1 = new DescontoAteCincoItens();
+            Desconto d2 = new DescontoMaisCincoItens();
+            Desconto d3 = new SemDesconto();
+
+            d1.Proximo = d2;
+            var desconto = d1.Calcula(orcamento);
+
+            Console.WriteLine(desconto);
+        }        
+    }
+    
+    public interface Desconto 
+    {
+        double Calcula(Orcamento orcamento);
+        Desconto Proximo { get; set; }
+    }
+    
+    public class DescontoAteCincoItens : Desconto
+    {
+        public Desconto Proximo { get; set; }
+        
+        public double Calcula(Orcamento orcamento) 
+        {
+            if(orcamento.Itens.Count() <= 5)
+            {
+              return orcamento.Valor * 0.1;  
+            } else {
+                return Proximo.Calcula(orcamento);
+            }
+            
+        }
+    }
+    
+    public class DescontoMaisCincoItens : Desconto
+    {
+        public Desconto Proximo { get; set; }
+        
+        public double Calcula(Orcamento orcamento) 
+        {
+            if(orcamento.Itens.Count() <= 5)
+            {
+              return orcamento.Valor * 0.1;  
+            } else {
+                return Proximo.Calcula(orcamento);
+            }
+        }
+    }  
+    
+    public class SemDesconto : Desconto
+    {
+        public Desconto Proximo { get; set; }
+        public double Calcula(Orcamento orcamento) 
+        {
+            return 0;
+        }
+    }
+}
