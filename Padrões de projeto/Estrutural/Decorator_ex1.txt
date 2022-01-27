@@ -1,0 +1,89 @@
+//Microsoft (R) Visual C# Compiler version 3.4.0-beta4-19562-05 (ff930dec)
+//Copyright (C) Microsoft Corporation. All rights reserved.
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+namespace Rextester
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            //Your code goes here
+            Imposto iss = new ISS(new ICMS());
+	    Orcamento orcamento = new Orcamento(500);
+	    double valor = iss.Calcula(orcamento);
+	    Console.WriteLine(valor);
+
+        }
+    }
+    
+    public class Orcamento 
+    {
+        public double Valor { get; private set; }
+
+        public Orcamento(double valor) 
+        {
+            this.Valor = valor;
+        }       
+        
+        public double returnValue()
+        {
+            return this.Valor;
+        }
+    }  
+    
+    public abstract class Imposto 
+    {
+	public Imposto OutroImposto { get; set; }
+
+        public Imposto(Imposto outroImposto){
+          this.OutroImposto = outroImposto;
+        }	
+
+        public Imposto(){
+          this.OutroImposto = null;
+        }
+
+        public abstract double Calcula(Orcamento orcamento);
+
+        protected double CalculoDoOutroImposto(Orcamento orcamento){
+          if(OutroImposto == null) return 0;
+          return OutroImposto.Calcula(orcamento);
+        }
+    }
+    
+    public class ICMS : Imposto
+    {
+        public ICMS(Imposto outroImposto) : base(outroImposto) {}
+        public ICMS() : base() {}
+        public override double Calcula(Orcamento orcamento) 
+        {
+            return orcamento.Valor * 0.05 + 50 + CalculoDoOutroImposto(orcamento);
+        }
+    }
+    
+    public class ISS : Imposto
+    {
+        public ISS(Imposto outroImposto) : base(outroImposto) {}
+        public ISS() : base() {}
+        public override double Calcula(Orcamento orcamento) 
+        {
+            return orcamento.Valor * 0.75 + CalculoDoOutroImposto(orcamento);
+        }
+    } 
+
+    public class ImpostoMuitoAlto : Imposto
+    {
+        public ISS(Imposto outroImposto) : base(outroImposto) {}
+        public ISS() : base() {}
+        public override double Calcula(Orcamento orcamento) 
+        {
+            return orcamento.Valor * 0.2 + CalculoDoOutroImposto(orcamento);
+        }
+    }        
+}
