@@ -1,0 +1,163 @@
+//Microsoft (R) Visual C# Compiler version 3.4.0-beta4-19562-05 (ff930dec)
+//Copyright (C) Microsoft Corporation. All rights reserved.
+
+
+using System;
+using System.Text;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Collections;
+
+namespace Rextester
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            //Your code goes here
+            Orcamento orcamento = new Orcamento(2000);
+            orcamento.AplicaDescontoExtra();
+	    orcamento.Aprova();
+            orcamento.AplicaDescontoExtra();
+	    orcamento.Finaliza();
+        }
+    }
+    
+    public class Item 
+    {
+        public String Nome { get; private set; }
+        public double Valor { get; private set; }
+
+        public Item(String nome, double valor) 
+        {
+            this.Nome = nome;
+            this.Valor = valor;
+        }
+    }
+    
+    public class Orcamento 
+    {
+
+	public EstadoDeUmOrcamento EstadoAtual { get; set; }
+
+        public IList<Item> Itens { get; private set; }
+        public double Valor { get; set; }
+        
+        public void AplicaDescontoExtra()
+        {
+            EstadoAtual.AplicaDescontoExtra(this);
+        }	
+
+        public Orcamento(double valor)
+        {
+            this.Valor = valor;
+            this.Itens = new List<Item>();
+	    this.EstadoAtual = new EmAprovacao();
+        }
+
+        public void Adiciona(Item item) 
+        {
+            Itens.Add(item);
+        }       
+
+	public void Aprova(){
+	  EstadoAtual.Aprova(this);  
+	}
+
+	public void Reprova(){
+	  EstadoAtual.Reprova(this);  
+	}
+
+	public void Finaliza(){
+	  EstadoAtual.Finaliza(this);  
+	}
+    }
+
+    public interface EstadoDeUmOrcamento
+    {
+	void AplicaDescontoExtra(Orcamento orcamento);
+
+	void Aprova(Orcamento orcamento);
+	void Reprova(Orcamento orcamento);
+	void Finaliza(Orcamento orcamento);
+    }
+
+    public class Aprovado : EstadoDeUmOrcamento
+    {
+	
+	public void AplicaDescontoExtra(Orcamento orcamento){
+	  orcamento.Valor = orcamento.Valor - (orcamento.Valor * 0.02);
+	}
+	public void Aprova(Orcamento orcamento){
+  	  throw new Exception("Já está aprovado");	
+	}	
+
+	public void Reprova(Orcamento orcamento){
+  	  orcamento.EstadoAtual = new Reprovado();	
+	}
+
+	public void Finaliza(Orcamento orcamento){
+	  orcamento.EstadoAtual = new Finalizado();
+	}
+    }	
+
+    public class Reprovado : EstadoDeUmOrcamento
+    {
+	public void AplicaDescontoExtra(Orcamento orcamento){
+	  throw new Exception("Não recebe desconto");
+	}
+
+	public void Aprova(Orcamento orcamento){
+  	  throw new Exception("Não pode aprovar");	
+	}	
+
+	public void Reprova(Orcamento orcamento){
+  	  orcamento.EstadoAtual = new Reprovado();	
+	}
+
+	public void Finaliza(Orcamento orcamento){
+  	  throw new Exception("Não pode finalizar");
+	}
+    }
+
+    public class Finalizado : EstadoDeUmOrcamento
+    {
+	public void AplicaDescontoExtra(Orcamento orcamento){
+	  throw new Exception("Não recebe desconto");
+	}	
+
+	public void Aprova(Orcamento orcamento){
+  	  throw new Exception("Não pode finalizar");	
+	}	
+
+	public void Reprova(Orcamento orcamento){
+  	  throw new Exception("Não pode finalizar");	
+	}
+
+	public void Finaliza(Orcamento orcamento){
+  	  orcamento.EstadoAtual = new Finalizado();
+	}
+    }
+
+    public class EmAprovacao : EstadoDeUmOrcamento
+    {
+
+	public void AplicaDescontoExtra(Orcamento orcamento){
+	  orcamento.Valor = orcamento.Valor - (orcamento.Valor * 0.05);
+	}
+
+	public void Aprova(Orcamento orcamento){
+  	  orcamento.EstadoAtual = new Aprovado();	
+	}	
+
+	public void Reprova(Orcamento orcamento){
+  	  orcamento.EstadoAtual = new Reprovado();	
+	}
+
+	public void Finaliza(Orcamento orcamento){
+  	  throw new Exception("Não pode finalizar");
+	}
+    }   
+}
