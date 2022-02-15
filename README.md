@@ -38,6 +38,11 @@ transições são vários e complexos, fazendo com que a implementação não se
  O State auxilia a manter o controle dos estados simples e organizados através da 
 criação de classes que representem cada estado e saiba controlar as transições.
 
+Builder
+O Builder é um padrão de projeto criacional que permite a você construir objetos 
+complexos passo a passo. O padrão permite que você produza diferentes tipos e 
+representações de um objeto usando o mesmo código de construção.
+
 
 
 Mais referencias em: https://refactoring.guru/pt-br <br>
