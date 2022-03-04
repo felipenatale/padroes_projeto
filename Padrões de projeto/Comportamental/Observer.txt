@@ -1,0 +1,161 @@
+//Microsoft (R) Visual C# Compiler version 3.4.0-beta4-19562-05 (ff930dec)
+//Copyright (C) Microsoft Corporation. All rights reserved.
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+namespace Rextester
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {            
+            NotaFiscalBuilder builder = new NotaFiscalBuilder();
+            builder.AdicionaAcao(new EnviadorDeEmail());
+            builder.AdicionaAcao(new NotaFiscalDao());
+            
+            NotaFiscal nf = builder.ParaEmpresa("Caelum")
+                          .ComCnpj("123.456.789/0001-10")
+                          .ComItem(new ItemDaNota("item 1", 100.0))
+                          .ComItem(new ItemDaNota("item 2", 200.0))
+                          .ComItem(new ItemDaNota("item 3", 300.0))
+                          .ComObservacoes("entregar nf pessoalmente")
+                          .Constroi();
+            
+            Console.WriteLine(nf.ValorTotal);
+            Console.WriteLine(nf.Cnpj);
+            Console.WriteLine(nf.Observacoes);
+        }
+    }
+    
+    public class ItemDaNota{
+        
+        public String Nome { get; private set; }
+        public double Valor { get; private set; }
+        
+        public ItemDaNota(String nome, double valor){
+            this.Nome = nome;
+            this.Valor = valor;
+        }
+    }
+
+    public interface AcaoAposGerarNota 
+    {
+        void Executa(NotaFiscal notaFiscal);
+    }
+
+    public class EnviadorDeEmail : AcaoAposGerarNota 
+    {        
+        public void Executa(NotaFiscal notaFiscal) 
+        {
+            Console.WriteLine("enviando por e-mail");
+        }
+    }
+
+    public class NotaFiscalDao : AcaoAposGerarNota 
+    {
+        public void Executa(NotaFiscal notaFiscal) 
+        {
+            Console.WriteLine("salvando no banco");
+        }
+    }
+
+    public class EnviadorDeSms : AcaoAposGerarNota 
+    {
+        public void Executa(NotaFiscal notaFiscal) 
+        {
+            Console.WriteLine("enviando por sms");
+        }
+    }
+
+    public class Impressora : AcaoAposGerarNota 
+    {
+        public void Executa(NotaFiscal notaFiscal) 
+        {
+            Console.WriteLine("imprimindo notaFiscal");
+        }
+    }
+    
+    public class NotaFiscal{
+        
+        public String RazaoSocial { get; set; }
+        public String Cnpj { get; set; }
+        public DateTime DataDeEmissao { get; set; }
+        public double ValorTotal { get; private set; }
+        public double Impostos { get; private set; }
+        public IList<ItemDaNota> Itens { get; set; }
+        public String Observacoes { get; set; }
+        
+        public NotaFiscal(String razaoSocial, String cnpj, double valorTotal, String observacoes){
+            this.RazaoSocial = razaoSocial;
+            this.Cnpj = cnpj;
+            this.ValorTotal = valorTotal;
+            this.Observacoes = observacoes;
+        }
+    }
+    
+    public class NotaFiscalBuilder 
+    {
+        public String RazaoSocial { get; private set; }
+        public String Cnpj { get; private set; }
+        public double ValorTotal { get; private set; }
+        public double Impostos { get; private set; }
+        public DateTime Data { get; private set; }
+        public String Observacoes { get; private set; }
+
+        private IList<ItemDaNota> todosItens = new List<ItemDaNota>();
+        
+        private IList<AcaoAposGerarNota> todasAcoesASeremExecutadas;
+        
+        public NotaFiscalBuilder() 
+        {
+            this.todasAcoesASeremExecutadas = new List<AcaoAposGerarNota>();
+        }
+
+        public void AdicionaAcao(AcaoAposGerarNota novaAcao) 
+        {
+            this.todasAcoesASeremExecutadas.Add(novaAcao);
+        }
+        
+        public NotaFiscal Constroi(){
+            NotaFiscal notaFiscal =  new NotaFiscal(RazaoSocial, Cnpj, ValorTotal, Observacoes);
+            
+            foreach(AcaoAposGerarNota acao in todasAcoesASeremExecutadas) 
+            {
+                acao.Executa(notaFiscal);
+            }
+            
+            return notaFiscal;
+        }
+
+        public NotaFiscalBuilder ParaEmpresa(String razaoSocial) 
+        {
+            this.RazaoSocial = razaoSocial;
+            return this; // retorno eu mesmo, o próprio builder, para que o cliente continue utilizando
+        }
+
+        public NotaFiscalBuilder ComCnpj(String cnpj) 
+        {
+            this.Cnpj = cnpj;
+            return this;
+        }
+
+        public NotaFiscalBuilder ComObservacoes(String observacoes) 
+        {
+            this.Observacoes = observacoes;
+            return this;
+        }
+
+        public NotaFiscalBuilder ComItem(ItemDaNota item) 
+        {
+            todosItens.Add(item);
+            this.ValorTotal += item.Valor;
+            this.Impostos += item.Valor * 0.05;
+            return this;
+        }
+
+    }
+}
